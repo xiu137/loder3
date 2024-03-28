@@ -133,12 +133,12 @@ def transform_CRS(detect_result:list,input_img:str):
     return result
 
 
-def save_result(detect_result:list):
-    with open('output.txt','w') as f:
+def save_result(detect_result:list,output_file:str="output.txt"):
+    with open(output_file,'w') as f:
         for item in detect_result:
             f.write(str(item)+'\n')
     
-def main(input_img: str, output_img: str, model_path: str, size_stride: list[tuple],confidence:float=0.5,exclude:float=0.5):
+def main(input_img: str, output_label: str, model_path: str, size_stride: list[tuple],confidence:float=0.5,exclude:float=0.5):
     all_result = []
     for size,stride in size_stride:
         all_result += storm_detect(input_img, model_path, size, stride,confidence)
@@ -146,12 +146,12 @@ def main(input_img: str, output_img: str, model_path: str, size_stride: list[tup
     fixed_detect_result = remove_overlaps(all_result,exclude)
     # display_result(input_img, output_img, fixed_detect_result)
     fixed_detect_result = transform_CRS(fixed_detect_result,input_img)
-    save_result(fixed_detect_result)
+    save_result(fixed_detect_result,output_label)
 
 if __name__ == "__main__":
     main(
         input_img=r".\新建文件夹\20230708.tif",
-        output_img="20230708_output.tif",
+        output_label="20230708_output.tif",
         model_path=r'./best (2).pt',
         size_stride=[(4500,900),(3000,600),(2000,400)],
         confidence=0.6,
