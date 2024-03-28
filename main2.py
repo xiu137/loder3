@@ -8,6 +8,7 @@ from pyproj import Transformer
 Image.MAX_IMAGE_PIXELS = None
 
 def cut_images(input_file:str, output_url:str, size:int, stride:int)->tuple:
+    all_image = {}
     file_name = input_file.split('/')[-1]
     with Image.open(input_file) as im:
         width, height = im.size
@@ -15,8 +16,9 @@ def cut_images(input_file:str, output_url:str, size:int, stride:int)->tuple:
             for j in range(0, height-size, stride):
                 box = (i, j, i+size, j+size)
                 cropped = im.crop(box)
-                cropped.save(output_url+file_name.split('.')[0] + f'_{i}_{j}_{stride}.' + file_name.split('.')[-1])
-        return im.size
+                # cropped.save(output_url+file_name.split('.')[0] + f'_{i}_{j}_{stride}.' + file_name.split('.')[-1])
+                all_image[(i,j)] = cropped
+        return all_image
 
 def compute_iou(box1, box2):
     """计算两个框的交并比"""
@@ -112,12 +114,10 @@ def storm_detect(input_img: str, model_path: str, size: int, stride: int,confide
     model = YOLO(model_path)
     if not os.path.exists("./temp/input"):
         os.makedirs("./temp/input")
-    img_width,img_height = cut_images(input_img, output_url="./temp/input/", size=size, stride=stride)
-    all_files = os.listdir("./temp/input")
+    all_files = cut_images(input_img, output_url="./temp/input/", size=size, stride=stride)
     detect_result = []
-    for file in all_files:
-        img = Image.open(f"./temp/input/{file}")
-        origin_keypoint = (int(file.split('_')[-3]),int(file.split('_')[-2]))
+    for file_keypoint in all_files.keys():
+        img = all_files[file_keypoint]
         results:ultralytics.engine.results.Results = model(img,save=True)
         conf = results[0].boxes.conf.cpu().numpy()
         xyxy = results[0].boxes.xyxy.cpu().numpy()
@@ -125,10 +125,10 @@ def storm_detect(input_img: str, model_path: str, size: int, stride: int,confide
         for i in range(len(conf)):
             if conf[i] > confidence:
                 x1,y1,x2,y2 = xyxy[i]
-                x1 = int(x1 + origin_keypoint[0])
-                y1 = int(y1 + origin_keypoint[1])
-                x2 = int(x2 + origin_keypoint[0])
-                y2 = int(y2 + origin_keypoint[1])
+                x1 = int(x1 + file_keypoint[0])
+                y1 = int(y1 + file_keypoint[1])
+                x2 = int(x2 + file_keypoint[0])
+                y2 = int(y2 + file_keypoint[1])
                 # 将检测结果的坐标变为相对于原始图像的坐标
                 detect_result.append((x1,y1,x2,y2,conf[i],obj_types[i]))
     detect_result = screen_boxes(detect_result, size)
@@ -178,9 +178,9 @@ def main(input_img: str, output_img: str, model_path: str, size_stride: list[tup
     all_result = []
     for size,stride in size_stride:
         all_result += storm_detect(input_img, model_path, size, stride,confidence)
-        clean_temp()
+        # clean_temp()
     fixed_detect_result = remove_overlaps(all_result,exclude)
-    display_result(input_img, output_img, fixed_detect_result)
+    # display_result(input_img, output_img, fixed_detect_result)
     fixed_detect_result = transform_CRS(fixed_detect_result,input_img)
     save_result(fixed_detect_result)
 
