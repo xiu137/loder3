@@ -22,12 +22,6 @@ def cut_images(input_file:str, output_url:str, size:int, stride:int)->tuple:
 
 def compute_iou(box1, box2):
     """计算两个框的交并比"""
-    # x1, y1, x2, y2 = max(box1[0], box2[0]), max(box1[1], box2[1]), min(box1[2], box2[2]), min(box1[3], box2[3])
-    # inter_area = max(0, x2 - x1) * max(0, y2 - y1)
-    # box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    # box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    # union_area = box1_area + box2_area - inter_area
-    # iou = inter_area / union_area
 
     # 计算交集矩形的坐标
     x1 = max(box1[0], box2[0])
@@ -86,30 +80,6 @@ def screen_boxes(boxes, scale):
     """根据尺度筛选框"""
     return [box for box in boxes if (box[2]-box[0])*(box[3]-box[1]) >= (scale/2)**2]
 
-# def storm_detect(input_img: str, model_path: str, size: int, stride: int,confidence:float=0.5):
-#     model = YOLO(model_path)
-#     if not os.path.exists("./temp/input"):
-#         os.makedirs("./temp/input")
-#     img_width,img_height = cut_images(input_img, output_url="./temp/input/", size=size, stride=stride)
-#     all_files = os.listdir("./temp/input")
-#     detect_result = []
-#     for file in all_files:
-#         img = Image.open(f"./temp/input/{file}")
-#         origin_keypoint = (int(file.split('_')[-3]),int(file.split('_')[-2]))
-#         results:ultralytics.engine.results.Results = model(img,save=True)
-#         conf = results[0].boxes.conf.cpu().numpy()
-#         xyxy = results[0].boxes.xyxy.cpu().numpy()
-#         obj_types = results[0].boxes.cls.cpu().numpy()
-#         for i in range(len(conf)):
-#             if conf[i] > confidence:
-#                 x1,y1,x2,y2 = xyxy[i]
-#                 x1 = int(x1 + origin_keypoint[0])
-#                 y1 = int(y1 + origin_keypoint[1])
-#                 x2 = int(x2 + origin_keypoint[0])
-#                 y2 = int(y2 + origin_keypoint[1])
-#                 detect_result.append((x1,y1,x2,y2,conf[i],obj_types[i]))
-#     return detect_result
- 
 def storm_detect(input_img: str, model_path: str, size: int, stride: int,confidence:float=0.5):
     model = YOLO(model_path)
     if not os.path.exists("./temp/input"):
@@ -168,12 +138,6 @@ def save_result(detect_result:list):
         for item in detect_result:
             f.write(str(item)+'\n')
     
-def clean_temp():
-    all_files = os.listdir("./temp/input")
-    for file in all_files:
-        os.remove(f"./temp/input/{file}")
-    os.rmdir("./temp/input")
-
 def main(input_img: str, output_img: str, model_path: str, size_stride: list[tuple],confidence:float=0.5,exclude:float=0.5):
     all_result = []
     for size,stride in size_stride:
