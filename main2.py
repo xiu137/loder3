@@ -149,7 +149,8 @@ def main(input_img: str, output_img: str,output_label: str, model_path: str, siz
 if __name__ == "__main__":
     main(
         input_img=r".\新建文件夹\20230708.tif",
-        output_label="20230708_output.tif",
+        output_img="20230708_output.tif",
+        output_label="20230708_output.txt",
         model_path=r'./best (2).pt',
         size_stride=[(4500,900),(3000,600),(2000,400)],
         confidence=0.6,
