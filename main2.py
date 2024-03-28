@@ -82,8 +82,6 @@ def screen_boxes(boxes, scale):
 
 def storm_detect(input_img: str, model_path: str, size: int, stride: int,confidence:float=0.5):
     model = YOLO(model_path)
-    if not os.path.exists("./temp/input"):
-        os.makedirs("./temp/input")
     all_files = cut_images(input_img, output_url="./temp/input/", size=size, stride=stride)
     detect_result = []
     for file_keypoint in all_files.keys():
@@ -138,13 +136,13 @@ def save_result(detect_result:list,output_file:str="output.txt"):
         for item in detect_result:
             f.write(str(item)+'\n')
     
-def main(input_img: str, output_label: str, model_path: str, size_stride: list[tuple],confidence:float=0.5,exclude:float=0.5):
+def main(input_img: str, output_img: str,output_label: str, model_path: str, size_stride: list[tuple],confidence:float=0.5,exclude:float=0.5):
     all_result = []
     for size,stride in size_stride:
         all_result += storm_detect(input_img, model_path, size, stride,confidence)
         # clean_temp()
     fixed_detect_result = remove_overlaps(all_result,exclude)
-    # display_result(input_img, output_img, fixed_detect_result)
+    display_result(input_img, output_img, fixed_detect_result)
     fixed_detect_result = transform_CRS(fixed_detect_result,input_img)
     save_result(fixed_detect_result,output_label)
 
